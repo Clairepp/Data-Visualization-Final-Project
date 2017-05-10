@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+
+<meta charset="utf-8">
+<html>
+    <title>Pokemon Index</title>
+<style>
+
+a:hover {
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+body {
+  font: 14px Optima;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+
+circle {
+            opacity: 0.6;
+            stroke: #cccccc;
+            fill: #cccccc;
+            background-color: #cccccc;
+        }    
+
+button {
+            background-color: #ddd;
+            font-weight: bold;
+            border-radius: 8px;
+            padding: 8px;
+            border: 0;
+            
+        }
+button:hover {
+            color: white;
+            cursor: pointer;
+        }
+    
+#floater {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: ghostwhite;
+            border-radius: 5px;
+            box-shadow: 2px 2px 2px #cccccc;
+            padding: 5px;
+            visibility: hidden;
+            font-family: Ayuthaya;
+            color:black;
+            opacity: 0.8;
+    
+        }
+#controls {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            width: 1400px;
+            font-size: 12px;
+            text-align: center;
+        }
+#typechart {
+            position: absolute;
+            width: 200px;
+            height: 100px;
+            left: 1100px;
+            top: 10px;
+            background-color: white;
+            padding: 5px;
+        }
+    
+#pokemonweb {
+            position: absolute;
+            width: 200px;
+            height: 100px;
+            left: 100px;
+            top: 10px;
+            background-color: white;
+            padding: 5px;
+        }
+    
+#pic {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            left: 50px;
+            top: 500px;
+            background-color: grey;
+            padding: 5px;
+        }
+    
+#optionS {
+      
+        font-weight:bold;
+        font-size: 13px;
+        
+    }
+    
+#optionL {
+    
+        font-weight:bold;
+        font-size: 13px;
+        
+    }
+    
+
+
+</style>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script>
+
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 900 - margin.left - margin.right,
+    height = 556 - margin.top - margin.bottom;
+
+var x = d3.scale.linear()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var color = d3.scale.category20();
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var data;
+var generation = 1;
+
+    
+  function getData(generation){
+        
+            d3.selectAll("svg > *").remove();
+            d3.csv( "data/Pokemon" + generation + ".csv",function(d) {
+                data = d;
+                draw(feature, feature1,generation);
+                listTypeOne();
+                listTypeTwo();
+                setActiveFeature(newFeature,generation);
+                setActiveFeature1(newFeature1,generation);
+                
+            });
+        }
+    
+var feature = "HP";
+var feature1 = "Defense"
+var number = 0;
+var num = 0;
+    function setActiveFeature(newFeature,generation) {
+        feature = newFeature;
+        draw(feature,feature1,generation);
+    }
+    
+    function setActiveFeature1(newFeature1,generation) {
+        feature1 = newFeature1;
+        draw(feature,feature1,generation);
+    }
+    
+    
+
+    
+    
+    
+    function draw(feature,feature1,generation){
+        
+        d3.selectAll("svg > *").remove();
+        
+        var svg = d3.select("#pokemonindex")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        data.forEach(function(d) {
+            d.ID = +d.ID;
+            d.HP = +d.HP;
+            d.Total = +d.Total;
+            d.Attack = +d.Attack;
+            d.Defense = +d.Defense;
+            d.Sp_Atk = +d.Sp_Atk;
+            d.Sp_Def = +d.Sp_Def;
+            d.Speed = +d.Speed;
+                  
+        });
+        
+        x.domain(d3.extent(data, function(d) { return +d[feature1]; })).nice();
+        y.domain(d3.extent(data, function(d) { return +d[feature]; })).nice();
+
+        var axisx = svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis)
+        .append("text")
+          .attr("class", "label")
+          .attr("x", width)
+          .attr("y", -6)
+          .style("text-anchor", "end")
+          .text(feature1);
+
+
+        var axisy = svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+        .append("text")
+          .attr("class", "label")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end")
+          .text(feature);
+
+
+        var circle = svg.selectAll("circle")
+          .data(data)
+        .enter().append("circle")
+          .attr("class", function(d) {return d["Type_1"] + " " + d["Type_2"]})
+          .attr("r", function(d) { return +d["Total"]* 0.04; } )
+          .attr("cx", function(d) { return x(+d[feature]); })
+          .attr("cy", function(d) { return y(+d[feature1]); })
+          .style("fill", function(d) { return color(d["Type_1"]); })
+         .style("opacity",0.6)
+          .on("mouseover", showFloater)
+            .on("mouseout", hideFloater);
+        
+        d3.select("#nValueX").on("input", function() {
+            largedataX(+this.value);
+                })
+        
+        d3.select("#nValueY").on("input", function() {
+            largedataY(+this.value);
+                })
+        
+        d3.select("#nValueXs").on("input", function() {
+            smalldataX(+this.value);
+                })
+        
+        d3.select("#nValueYs").on("input", function() {
+            smalldataY(+this.value);
+                })
+         d3.select("#nValueL").on("input", function() {
+            largewhole(+this.value);
+                })
+         
+         d3.select("#nValueS").on("input", function() {
+            smallwhole(+this.value);
+                })
+         
+         d3.select("#ng").on("input", function() {
+            getData(+this.value);
+                })
+        
+
+        var legend = svg.selectAll(".legend")
+          .data(color.domain())
+        .enter().append("g")
+          .attr("class", "legend")
+          .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+        var rect = legend.append("rect")
+          .attr("x", width - 18)
+          .attr("width", 18)
+          .attr("height", 18)
+          .style("fill", color);
+
+        var text = legend.append("text")
+          .attr("x", width - 24)
+          .attr("y", 9)
+          .attr("dy", ".35em")
+          .style("text-anchor", "end")
+          .text(function(d) { return d; });
+        
+//        var text1 = svg.append("text")
+//        .attr("x", (width / 2))             
+//        .attr("y", 10 - (margin.top / 2))
+//        .attr("text-anchor", "middle")  
+//        .style("font-size", "18px") 
+//        .text("Tips:" );
+//        
+        
+        var text2 = svg.append("text")
+        .attr("x", (width / 2))             
+        .attr("y", 20 - (margin.top / 2))
+        .attr("text-anchor", "middle")  
+        .style("font-size", "16px") 
+        .style("fill", "dimgrey")
+        .style("font-family", "Chalkduster")
+        .text( "X:" + " " + feature1 + " " +  "Y:" + " " + feature);
+        
+        var text3 = svg.append("text")
+        .attr("x", (width / 2))             
+        .attr("y", 45 - (margin.top / 2))
+        .attr("text-anchor", "middle")  
+        .style("font-size", "14px") 
+        .style("fill", "dimgrey") 
+        .style("font-family", "Chalkduster")
+        .text("(The size of the circle is represented by the sum of all variables.)");
+        
+        
+        var svgtype = d3.select("#typechart")
+        svgtype.append('a')
+            .attr("xlink:href", "https://pokemondb.net/type")
+            .append("rect")  
+            .attr("x", 5)
+            .attr("y", 5)
+            .attr("height", 50)
+            .attr("width", 170)
+            .style("fill", "pink")
+            .attr("rx", 30)
+            .attr("ry", 30);
+    
+        svgtype.append("text")
+            .attr("x", 90)
+            .attr("y", 40)
+            .style("font-size", "12px")
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .style("pointer-events", "none")
+            .text("Pokemon Type Chart")
+            .style("font-family", "Chalkduster")
+            .style("font-weight", "bold")
+            .style("fill","white");
+        
+        svgtype.append("text")
+            .attr("x", 90)
+            .attr("y", 20)
+            .style("fill", "black")
+            .style("font-size", "12px")
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .style("pointer-events", "none")
+            .text("Click to:")
+            .style("font-family", "Chalkduster")
+            .style("font-weight", "bold")
+            .style("fill","white");
+        
+        
+    // pokemon website
+        
+    var svgweb = d3.select("#pokemonweb")
+        svgweb.append('a')
+            .attr("xlink:href", "http://www.pokemon.com/us/pokedex/")
+            .append("rect")  
+            .attr("x", -5)
+            .attr("y", 5)
+            .attr("height", 50)
+            .attr("width", 200)
+            .style("fill", "lightblue")
+            .attr("rx", 30)
+            .attr("ry", 30);
+    
+        svgweb.append("text")
+            .attr("x", 95)
+            .attr("y", 40)
+            .style("font-size", "12px")
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .style("pointer-events", "none")
+            .text("Keep Track of Pokemon")
+            .style("font-family", "Chalkduster")
+            .style("font-weight", "bold")
+            .style("fill","white");
+        
+        svgweb.append("text")
+            .attr("x", 95)
+            .attr("y", 20)
+            .style("fill", "black")
+            .style("font-size", "12px")
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .style("pointer-events", "none")
+            .text("Click to:")
+            .style("font-family", "Chalkduster")
+            .style("font-weight", "bold")
+            .style("fill","white");
+        
+   
+
+    };
+    
+      
+
+    
+   
+    
+    function showFloater(d,i) {
+            d3.select("#gen").text(data[i]["Generation"]);
+            d3.select("#Name").text(data[i]["Name"]);
+            d3.select("#feature").text(data[i][feature]);
+            d3.select("#feature1").text(data[i][feature1]);
+            d3.select("#type1").text(data[i]["Type_1"]);
+            d3.select("#type2").text(data[i]["Type_2"]);
+            d3.select("#xper").text(function(d) {
+                return ((data[i][feature1]/data[i]["Total"] * 100).toFixed(2)+ "%");
+            });
+            d3.select("#yper").text(function(d) {
+                return ((data[i][feature]/data[i]["Total"] * 100).toFixed(2)+ "%");
+            });
+//            text(math.round(data[i][feature]/data[i]["Total"])+ "%");
+            
+            d3.select("#floater")
+                .style("top", d3.event.pageY + "px")
+                .style("left", d3.event.pageX + "px")
+                .style("visibility","visible");
+ }
+        function hideFloater() {
+            d3.select("#floater")
+                .style("visibility","hidden");
+        }
+
+        
+
+        function dimAll() {
+            var circles = d3.selectAll("circle")
+                .style("opacity",0.01);
+            //var texts = d3.select("#myDiv").style("opacity",0.01);
+        }
+        
+        function showAll() {
+            var circles = d3.selectAll("circle")
+                .style("opacity",0.6);
+            //var texts = d3.select("#myDiv").style("opacity",0.9);
+        }
+        
+        function filter(key) {
+            dimAll();
+            var circles = d3.selectAll("."+key)
+                .style("opacity",0.6);
+            var text1 = d3.select("#myDiv").node().value;
+            //var text = d3.selectAll("."+text1).style("opacity",0.9);
+        }
+    
+        
+        
+        function filterBoth() {
+            var type1 = d3.select("#Type_1").node().value;
+            var type2 = d3.select("#Type_2").node().value;
+            dimAll();
+            var circles = d3.selectAll("."+type1+"."+type2)
+                .style("opacity",0.6);
+        }
+    
+    
+    function listTypeOne() {
+            d3.select("#Type_1").selectAll("option")
+                    .data(d3.map(data, function(d) {return d["Type_1"];}).keys())
+                .enter().append("option")
+                    .text(function(d) {return d;})
+                    .attr("value",function(d) {return d;});
+        }
+    
+    function listTypeTwo() {
+            d3.select("#Type_2").selectAll("option")
+                    .data(d3.map(data, function(d) {return d["Type_2"];}).keys())
+                .enter().append("option")
+                    .text(function(d) {return d;})
+                    .attr("value",function(d) {return d;});
+        }
+    
+    function filterTypeOne() {
+            var type1 = d3.select("#Type_1").node().value;
+            dimAll();
+            var circles = d3.selectAll("."+type1)
+                .style("opacity",0.6);
+        }
+    function filterTypeTwo() {
+            var type2 = d3.select("#Type_2").node().value;
+            dimAll();
+            var circles = d3.selectAll("."+type2)
+                .style("opacity",0.6);
+        }
+    
+    function largedataY(num){
+        var num = d3.select("#nValueY").node().value;
+        dimAll();
+        var circles = d3.selectAll("circle")
+                    .filter(function (d) {return +d[feature] >= num})
+                     .style("opacity",0.6);
+    }
+    
+    function largedataX(num){
+        var num = d3.select("#nValueX").node().value;
+        dimAll();
+        var circles = d3.selectAll("circle")
+                    .filter(function (d) {return +d[feature1] >= num})
+                     .style("opacity",0.6);
+    }
+    
+    function largewhole(num){
+        var num = d3.select("#nValueL").node().value;
+        dimAll();
+        var circles = d3.selectAll("circle")
+                    .filter(function (d) {return +d[feature1] >= num && +d[feature] >= num})
+                     .style("opacity",0.6);
+    }
+    
+    function smalldataY(num){
+        var num = d3.select("#nValueYs").node().value;
+        dimAll();
+        var circles = d3.selectAll("circle")
+                    .filter(function (d) {return +d[feature] <= num})
+                     .style("opacity",0.6);
+    }
+    
+    function smalldataX(num){
+        var num = d3.select("#nValueXs").node().value;
+        dimAll();
+        var circles = d3.selectAll("circle")
+                    .filter(function (d) {return +d[feature1] <= num})
+                     .style("opacity",0.6);
+    }
+    
+    function smallwhole(num){
+        var num = d3.select("#nValueS").node().value;
+        dimAll();
+        var circles = d3.selectAll("circle")
+                    .filter(function (d) {return +d[feature1] <= num && +d[feature] <= num})
+                     .style("opacity",0.6);
+    }
+    
+
+</script>
+    
+<body onload="getData('1')" >
+    <h1 style = "font-family: Chalkduster" align="center" >Welcome to The Pokemon's World!</h1>
+    
+    <div id="controls">
+        <p>
+            
+            <strong>Generation</strong>: 
+            <button onclick="getData('1')">Generation 1</button> 
+            <button onclick="getData('2')">Generation 2</button> 
+            <button onclick="getData('3')">Generation 3</button> 
+            <button onclick="getData('4')">Generation 4</button>
+            <button onclick="getData('5')">Generation 5</button>
+            <button onclick="getData('6')">Generation 6</button>
+        </p>
+        
+    <div id="features1">
+        <p>
+            <strong>X Variables</strong>:
+            <button onclick="setActiveFeature1('HP')">HP</button> 
+            <button onclick="setActiveFeature1('Attack')">Attack</button> 
+            <button onclick="setActiveFeature1('Defense')">Defense</button> 
+            <button onclick="setActiveFeature1('Sp_Atk')">Sp.Atk</button>
+            <button onclick="setActiveFeature1('Sp_Def')">Sp.Def</button>
+            <button onclick="setActiveFeature1('Speed')">Speed</button>
+        </p>
+        
+    <div id="features">
+        <p>
+            <strong >Y Variables</strong>:
+            <button onclick="setActiveFeature('HP')">HP</button> 
+            <button onclick="setActiveFeature('Attack')">Attack</button> 
+            <button onclick="setActiveFeature('Defense')">Defense</button> 
+            <button onclick="setActiveFeature('Sp_Atk')">Sp.Atk</button>
+            <button onclick="setActiveFeature('Sp_Def')">Sp.Def</button>
+            <button onclick="setActiveFeature('Speed')">Speed</button>
+        </p>
+        
+    <img id="switch1" src="sprites/rattata.gif" onmouseover="this.src='sprites/normal.png'" onmouseout="this.src='sprites/rattata.gif'"  />
+        
+    <img id="switch2" src="sprites/machop.gif" onmouseover="this.src='sprites/fighting.png'" onmouseout="this.src='sprites/machop.gif'"  />
+        
+    <img id="switch3" src="sprites/pidgey.gif" onmouseover="this.src='sprites/flying.png'" onmouseout="this.src='sprites/pidgey.gif'"  />
+        
+    <img id="switch4" src="sprites/zubat.gif" onmouseover="this.src='sprites/poison.png'" onmouseout="this.src='sprites/zubat.gif'"  />
+        
+    <img id="switch5" src="sprites/diglett.gif" onmouseover="this.src='sprites/ground.png'" onmouseout="this.src='sprites/diglett.gif'"  />
+        
+    <img id="switch6" src="sprites/geodude.gif" onmouseover="this.src='sprites/rock.png'" onmouseout="this.src='sprites/geodude.gif'"  />
+        
+    <img id="switch7" src="sprites/caterpie.gif" onmouseover="this.src='sprites/bug.png'" onmouseout="this.src='sprites/caterpie.gif'"  />
+        
+    <img id="switch8" src="sprites/gastly.gif" onmouseover="this.src='sprites/ghost.png'" onmouseout="this.src='sprites/gastly.gif'"  />
+        
+    <img id="switch9" src="sprites/magnemite.gif" onmouseover="this.src='sprites/steel.png'" onmouseout="this.src='sprites/magnemite.gif'"  />
+        
+    <img id="switch10" src="sprites/charmander.gif" onmouseover="this.src='sprites/fire.png'" onmouseout="this.src='sprites/charmander.gif'"  />
+        
+    <img id="switch11" src="sprites/squirtle.gif" onmouseover="this.src='sprites/water.png'" onmouseout="this.src='sprites/squirtle.gif'"  />
+        
+    <img id="switch12" src="sprites/bulbasaur.gif" onmouseover="this.src='sprites/grass.png'" onmouseout="this.src='sprites/bulbasaur.gif'"  />
+        
+    <img id="switch13" src="sprites/pikachu.gif" onmouseover="this.src='sprites/electric.png'" onmouseout="this.src='sprites/pikachu.gif'"  />
+    
+    <img id="switch14" src="sprites/abra.gif" onmouseover="this.src='sprites/psychic.png'" onmouseout="this.src='sprites/abra.gif'"  />  
+    
+    <img id="switch15" src="sprites/lapras.gif" onmouseover="this.src='sprites/ice.png'" onmouseout="this.src='sprites/lapras.gif'"  />  
+        
+    <img id="switch16" src="sprites/dratini.gif" onmouseover="this.src='sprites/dragon.png'" onmouseout="this.src='sprites/dratini.gif'"  /> 
+        
+    <img id="switch17" src="sprites/murkrow.gif" onmouseover="this.src='sprites/dark.png'" onmouseout="this.src='sprites/murkrow.gif'"  /> 
+        
+    <img id="switch18" src="sprites/jigglypuff.gif" onmouseover="this.src='sprites/fairy.png'" onmouseout="this.src='sprites/jigglypuff.gif'"  /> 
+    
+    
+        
+        
+        
+      <p id="Type">  
+            <strong >Filter by Type One:</strong> <select id="Type_1" onChange="filter(this.value)"></select>
+            <strong > Filter by Type Two:</strong><select id="Type_2" onChange="filter(this.value)"></select><br />
+        </p>
+
+
+        
+    <p id = "filter">
+            <button onclick="filterTypeOne()">Filter Type One</button>
+            <button onclick="filterTypeTwo()">Filter Type Two</button>
+            <button onclick="filterBoth()">Filter Both</button>
+            <button onclick="showAll()">Show All</button>
+            <button onclick="dimAll()">Dim All</button>
+        
+        </p> 
+        
+        
+    <div id="optionL">
+    <p>
+        <label for="nValueX" >
+         X Value is larger than <span id="nValue-valueX"></span>
+  </label>
+  <input type="number" min="0" max="300" step="5" value="0" id="nValueX">
+        
+  <label for="nValueY" >
+         Y Value is larger than <span id="nValue-valueY"></span>
+  </label>
+  <input type="number" min="0" max="300" step="5" value="0" id="nValueY">
+<label for="nValueL" >
+         All Values are larger than <span id="nValue-valueL"></span>
+  </label>
+  <input type="number" min="0" max="300" step="5" value="0" id="nValueL">
+</p>
+        
+</div>
+        
+        <div id="optionS">
+    <p>
+        <label for="nValueXs" >
+         X Value is smaller than <span id="nValue-valueXs"></span>
+  </label>
+  <input type="number" min="0" max="300" step="5" value="300" id="nValueXs">
+        
+  <label for="nValueYs" >
+         Y Value is smaller than <span id="nValue-valueYs"></span>
+  </label>
+  <input type="number" min="0" max="300" step="5" value="300" id="nValueYs">
+    <label for="nValueS" >
+         All Values are smaller than <span id="nValue-valueS"></span>
+  </label>
+  <input type="number" min="0" max="300" step="5" value="300" id="nValueS">
+</p>
+        
+</div>
+        
+   
+        <svg id="typechart"></svg>
+        <svg id="pokemonweb"></svg>
+        
+    <svg id="pokemonindex" width = "1700" height = "1500"> </svg>
+
+<!--    <div id="pic"></div>-->
+
+        
+     
+        
+    
+    
+    <div id="floater">
+        Name: <span id="Name"></span> (Generation: <span id="gen"></span>)<br />
+        Type 1: <span id="type1"></span>, Type 2: <span id="type2"></span><br />
+         X Value: <span id="feature1"></span>, X Percentage: <span id="xper"></span><br />
+        Y Value: <span id="feature"></span>, Y Percentage: <span id="yper"></span><br />
+    </div>
+        
+<!--    <iframe height="625px" width="610px" src="index2.html" name="iframe_a"></iframe>-->
+   
+    
+
+
+</body>
+</html>
